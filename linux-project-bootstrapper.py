@@ -26,22 +26,19 @@ def folder_has_valid_files(folder):
     if not os.path.exists(folder):
         return False
     try:
-        for filename in os.listdir(folder):
+        files = os.listdir(folder)
+        if len(files) < 3:
+            return False
+        
+        for filename in files:
             if filename.endswith(VALID_EXTENSIONS):
                 return True
     except:
         return False
     return False
 
-def on_file_created(event):
-    """Handler for file creation events"""
-    if event.is_directory:
-        return
-
-    if not event.src_path.endswith(VALID_EXTENSIONS):
-        return
-
-    root_folder = get_root_folder(event.src_path)
+def process_folder(root_folder):
+    """Process and move the folder if valid"""
     folder_name = os.path.basename(root_folder)
     destination_path = os.path.join(DESTINATION, folder_name)
     docker_folder = os.path.join(DOCKER_DESTINATION, folder_name)
@@ -72,11 +69,25 @@ def on_file_created(event):
     except Exception as e:
         print(f"Error moving folder: {e}")
 
+def on_file_created(event):
+    """Handler for file creation events"""
+    if event.is_directory:
+        return
+
+    if not event.src_path.endswith(VALID_EXTENSIONS):
+        return
+
+    root_folder = get_root_folder(event.src_path)
+    
+    time.sleep(2)
+    
+    process_folder(root_folder)
+
 handler = FileSystemEventHandler()
 handler.on_created = on_file_created
 
 observer = Observer()
-observer.schedule(handler, ".", recursive=True)
+observer.schedule(handler, "/home/matias", recursive=True)
 observer.start()
 
 try:
