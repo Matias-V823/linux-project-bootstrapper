@@ -44,7 +44,8 @@ def on_file_created(event):
     root_folder = get_root_folder(event.src_path)
     folder_name = os.path.basename(root_folder)
     destination_path = os.path.join(DESTINATION, folder_name)
-    docker_path = os.path.join(DOCKER_DESTINATION, folder_name)
+    docker_folder = os.path.join(DOCKER_DESTINATION, folder_name)
+    docker_file_path = os.path.join(docker_folder, "docker-compose.yml")
 
     if folder_name in PROCESSED_FOLDERS:
         return
@@ -62,10 +63,12 @@ def on_file_created(event):
 
     try:
         shutil.move(root_folder, destination_path)
-        os.makedirs(docker_path, exist_ok=True)
+        os.makedirs(docker_folder, exist_ok=True)
+        open(docker_file_path, "a").close()
+        
         PROCESSED_FOLDERS.add(folder_name)
         print(f"Project moved to: {destination_path}")
-        print(f"Folder created in docker: {docker_path}")
+        print(f"docker-compose.yml created at: {docker_file_path}")
     except Exception as e:
         print(f"Error moving folder: {e}")
 
